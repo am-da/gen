@@ -1,0 +1,420 @@
+        -:    0:Source:scan.c
+        -:    0:Graph:scan.gcno
+        -:    0:Data:scan.gcda
+        -:    0:Runs:0
+        -:    0:Programs:0
+        -:    1:#include "print.h"
+        -:    2:char string_attr[MAXSTRSIZE];
+        -:    3:int num_attr;
+        -:    4:char cbuf = '\0';
+        -:    5:int linenum = 0;
+        -:    6:
+function init_scan called 69 returned 100% blocks executed 100%
+       69:    7:int init_scan(char *filename, FILE **fp) {
+        -:    8:   
+       69:    9:    *fp = fopen(filename, "r");
+       69:   10:    if (*fp == NULL) {
+branch  0 taken 9%
+branch  1 taken 91%
+        6:   11:        return -1;
+        -:   12:    }
+       63:   13:    linenum = 1;
+       63:   14:    cbuf = (char) fgetc(*fp);
+        -:   15:
+       63:   16:    return 0;
+       69:   17:}
+        -:   18:
+function scan called 0 returned 0% blocks executed 0%
+    #####:   19:int scan(FILE *fp) {
+        -:   20:    char strbuf[MAXSTRSIZE];
+    #####:   21:    int i = 0, temp = 0, sep_type = 0;
+        -:   22:
+    #####:   23:    memset(strbuf, 0, sizeof(strbuf));
+        -:   24:
+    #####:   25:    while ((sep_type = not_token(cbuf, fp)) != 0) {
+branch  0 never executed
+branch  1 never executed
+    #####:   26:        if (sep_type == -1) {
+branch  0 never executed
+branch  1 never executed
+    #####:   27:            return -1;
+        -:   28:        }
+        -:   29:    }
+    #####:   30:    if (cbuf == EOF) {
+branch  0 never executed
+branch  1 never executed
+    #####:   31:        return -1;
+        -:   32:    }
+        -:   33:
+    #####:   34:    if ((cbuf >= 0x28 && cbuf <= 0x2e) || (cbuf >= 0x3a && cbuf <= 0x3e) ||
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+branch  5 never executed
+    #####:   35:        cbuf == 0x5b || cbuf == 0x5d) {
+branch  0 never executed
+branch  1 never executed
+        -:   36:        /* If there is a symbol, identify which symbol and return */
+    #####:   37:        strbuf[0] = cbuf;
+    #####:   38:        next_buf(fp);
+    #####:   39:        return symbol_check(strbuf, fp);
+    #####:   40:    } else if (cbuf >= 0x30 && cbuf <= 0x39) {
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+    #####:   41:        strbuf[0] = cbuf;
+    #####:   42:        for (i = 1; (cbuf = (char) fgetc(fp)) != EOF; i++) {
+branch  0 never executed
+branch  1 never executed
+    #####:   43:            if (i >= MAXSTRSIZE) {
+branch  0 never executed
+branch  1 never executed
+    #####:   44:                error("token is too long.");
+    #####:   45:                return -1;
+        -:   46:            }
+    #####:   47:            if (cbuf >= 0x30 && cbuf <= 0x39) {
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+    #####:   48:                strbuf[i] = cbuf;
+    #####:   49:            } else {
+    #####:   50:                break;
+        -:   51:            }
+    #####:   52:        }
+    #####:   53:        long temp = 0;
+        -:   54:
+    #####:   55:        temp = strtol(strbuf, NULL, 10);
+    #####:   56:        if (temp <= 32767) {
+branch  0 never executed
+branch  1 never executed
+    #####:   57:            num_attr = (int) temp;
+    #####:   58:            memset(string_attr, 0, sizeof(string_attr));
+    #####:   59:            snprintf(string_attr, MAXSTRSIZE, "%s", strbuf);
+    #####:   60:        } else {
+    #####:   61:            error("number is too big 32767.");
+    #####:   62:            return -1;
+        -:   63:        }
+        -:   64:
+    #####:   65:        return TNUMBER;
+    #####:   66:    } else if (cbuf == '\'') {
+branch  0 never executed
+branch  1 never executed
+        -:   67:
+    #####:   68:        int i = 0;
+        -:   69:        char tempbuf[MAXSTRSIZE];
+    #####:   70:        memset(tempbuf, 0, sizeof(tempbuf));
+        -:   71:
+    #####:   72:        for (i = 0; (cbuf = (char) fgetc(fp)) != EOF; i++) {
+branch  0 never executed
+branch  1 never executed
+    #####:   73:            if (i >= MAXSTRSIZE) {
+branch  0 never executed
+branch  1 never executed
+    #####:   74:                error("one token is too long.");
+    #####:   75:                return -1;
+        -:   76:            }
+    #####:   77:            if (cbuf == '\'') {
+branch  0 never executed
+branch  1 never executed
+    #####:   78:                next_buf(fp);
+    #####:   79:                if (cbuf == '\'') {
+branch  0 never executed
+branch  1 never executed
+    #####:   80:                    tempbuf[i] = '\'';
+    #####:   81:                    i++;
+    #####:   82:                    tempbuf[i] = '\'';
+    #####:   83:                } else {
+    #####:   84:                    memset(string_attr, 0, sizeof(string_attr));
+    #####:   85:                    snprintf(string_attr, MAXSTRSIZE, "%s", tempbuf);
+    #####:   86:                    return TSTRING;
+        -:   87:                }
+    #####:   88:            } else {
+    #####:   89:                tempbuf[i] = cbuf;
+        -:   90:            }
+    #####:   91:        }
+    #####:   92:        error("string end error.");
+    #####:   93:        return -1;
+    #####:   94:    } else if ((cbuf >= 0x41 && cbuf <= 0x5a) || (cbuf >= 0x61 && cbuf <= 0x7a)) {
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+branch  5 never executed
+        -:   95:
+    #####:   96:        strbuf[0] = cbuf;
+    #####:   97:        for (i = 1; (cbuf = (char) fgetc(fp)) != EOF; i++) {
+branch  0 never executed
+branch  1 never executed
+    #####:   98:            if (i >= MAXSTRSIZE) {
+branch  0 never executed
+branch  1 never executed
+    #####:   99:                error("token is too long.");
+    #####:  100:                return -1;
+        -:  101:            }
+    #####:  102:            if (((cbuf >= 0x41 && cbuf <= 0x5a) || (cbuf >= 0x61 && cbuf <= 0x7a)) || (cbuf >= 0x30 && cbuf <= 0x39)) {
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+branch  5 never executed
+branch  6 never executed
+branch  7 never executed
+    #####:  103:                strbuf[i] = cbuf;
+    #####:  104:            } else {
+    #####:  105:                break;
+        -:  106:            }
+    #####:  107:        }
+    #####:  108:        if ((temp = keyword_check(strbuf)) != -1) {
+branch  0 never executed
+branch  1 never executed
+    #####:  109:            return temp;
+        -:  110:        } else {
+    #####:  111:            memset(string_attr, 0, sizeof(string_attr));
+    #####:  112:            snprintf(string_attr, MAXSTRSIZE, "%s", strbuf);
+    #####:  113:            return TNAME;
+        -:  114:        }
+        -:  115:    }
+    #####:  116:    error("unexpected token.");
+    #####:  117:    return -1;
+    #####:  118:}
+        -:  119:
+function not_token called 0 returned 0% blocks executed 0%
+    #####:  120:int not_token(char c, FILE *fp) {
+    #####:  121:    if (c =='\t' || c =='\v' || c ==0x20){
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+branch  5 never executed
+    #####:  122:        next_buf(fp);
+    #####:  123:        return 1;
+        -:  124:    }
+    #####:  125:    else if (c == '\r'){
+branch  0 never executed
+branch  1 never executed
+    #####:  126:        next_buf(fp);
+    #####:  127:        if (cbuf == '\n') {
+branch  0 never executed
+branch  1 never executed
+    #####:  128:            next_buf(fp);
+    #####:  129:        }
+    #####:  130:        linenum++;
+    #####:  131:        return 1;
+        -:  132:    }
+    #####:  133:    else if(c == '\n'){
+branch  0 never executed
+branch  1 never executed
+    #####:  134:        next_buf(fp);
+    #####:  135:        if (cbuf == '\r') {
+branch  0 never executed
+branch  1 never executed
+    #####:  136:            next_buf(fp);
+    #####:  137:        }
+    #####:  138:        linenum++;
+    #####:  139:        return 1;
+        -:  140:    }
+    #####:  141:    else if(c ==  '{'){
+branch  0 never executed
+branch  1 never executed
+    #####:  142:        int sep_type = 2;
+    #####:  143:        while ((cbuf = (char) fgetc(fp)) != EOF) {
+branch  0 never executed
+branch  1 never executed
+    #####:  144:            if (cbuf == '}') {
+branch  0 never executed
+branch  1 never executed
+    #####:  145:                if (sep_type == 2) {
+branch  0 never executed
+branch  1 never executed
+    #####:  146:                    cbuf = (char) fgetc(fp);
+    #####:  147:                    return 2;
+        -:  148:                }
+    #####:  149:            } else if (cbuf == '*') {
+branch  0 never executed
+branch  1 never executed
+    #####:  150:                if ((cbuf = (char) fgetc(fp)) == '/') {
+branch  0 never executed
+branch  1 never executed
+    #####:  151:                    cbuf = (char) fgetc(fp);
+    #####:  152:                    return 3;
+        -:  153:                }
+    #####:  154:            }
+        -:  155:        }
+    #####:  156:        error("comment end error.");
+    #####:  157:        return -1;
+        -:  158:    }
+    #####:  159:    else if(c == '/'){
+branch  0 never executed
+branch  1 never executed
+    #####:  160:        if ((cbuf = (char) fgetc(fp)) == '*') {
+branch  0 never executed
+branch  1 never executed
+    #####:  161:            int sep_type = 3;
+    #####:  162:            while ((cbuf = (char) fgetc(fp)) != EOF) {
+branch  0 never executed
+branch  1 never executed
+    #####:  163:                if (cbuf == '}') {
+branch  0 never executed
+branch  1 never executed
+    #####:  164:                    if (sep_type == 2) {
+branch  0 never executed
+branch  1 never executed
+    #####:  165:                        cbuf = (char) fgetc(fp);
+    #####:  166:                        return 2;
+        -:  167:                    }
+    #####:  168:                } else if (cbuf == '*') {
+branch  0 never executed
+branch  1 never executed
+    #####:  169:                    if ((cbuf = (char) fgetc(fp)) == '/') {
+branch  0 never executed
+branch  1 never executed
+    #####:  170:                        cbuf = (char) fgetc(fp);
+    #####:  171:                        return 3;
+        -:  172:                    }
+    #####:  173:                }
+        -:  174:            }
+    #####:  175:            error("comment end error.");
+    #####:  176:            return -1;
+        -:  177:        }
+    #####:  178:        error("unexpected token.");
+    #####:  179:        return -1;
+        -:  180:    }
+        -:  181:    else{
+    #####:  182:        return 0;
+        -:  183:    }
+    #####:  184:}
+        -:  185:
+function keyword_check called 0 returned 0% blocks executed 0%
+    #####:  186:int keyword_check(const char *tokenstr) {
+    #####:  187:    int i = 0;
+    #####:  188:    if (strlen(tokenstr) <= MAXKEYWORDLENGTH) {
+branch  0 never executed
+branch  1 never executed
+    #####:  189:        for (i = 0; i < MAXKEYWORD; i++) {
+branch  0 never executed
+branch  1 never executed
+    #####:  190:            if (strcmp(tokenstr, key[i].keyword) == 0) {
+branch  0 never executed
+branch  1 never executed
+    #####:  191:                return key[i].keytoken;
+        -:  192:            }
+    #####:  193:        }
+    #####:  194:    }
+    #####:  195:    return -1;
+    #####:  196:}
+        -:  197:
+function symbol_check called 0 returned 0% blocks executed 0%
+    #####:  198:int symbol_check(char *tokenstr, FILE *fp) {
+    #####:  199:    switch (tokenstr[0]) {
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+branch  5 never executed
+branch  6 never executed
+branch  7 never executed
+branch  8 never executed
+branch  9 never executed
+branch 10 never executed
+branch 11 never executed
+branch 12 never executed
+branch 13 never executed
+branch 14 never executed
+        -:  200:        case '(':
+    #####:  201:            return TLPAREN;
+        -:  202:        case ')':
+    #####:  203:            return TRPAREN;
+        -:  204:        case '*':
+    #####:  205:            return TSTAR;
+        -:  206:        case '+':
+    #####:  207:            return TPLUS;
+        -:  208:        case ',':
+    #####:  209:            return TCOMMA;
+        -:  210:        case '-':
+    #####:  211:            return TMINUS;
+        -:  212:        case '.':
+    #####:  213:            return TDOT;
+        -:  214:        case ':':
+    #####:  215:            switch (cbuf) {
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  216:                case '=':
+    #####:  217:                    cbuf = (char) fgetc(fp);
+    #####:  218:                    return TASSIGN;
+        -:  219:                case EOF:
+    #####:  220:                    return -1;
+        -:  221:                default:
+    #####:  222:                    return TCOLON;
+        -:  223:            }
+        -:  224:        case ';':
+    #####:  225:            return TSEMI;
+        -:  226:        case '<':
+    #####:  227:            switch (cbuf) {
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+        -:  228:                case '>':
+    #####:  229:                    cbuf = (char) fgetc(fp);
+    #####:  230:                    return TNOTEQ;
+        -:  231:                case '=':
+    #####:  232:                    cbuf = (char) fgetc(fp);
+    #####:  233:                    return TLEEQ;
+        -:  234:                case EOF:
+    #####:  235:                    return -1;
+        -:  236:                default:
+    #####:  237:                    return TLE;
+        -:  238:            }
+        -:  239:        case '=':
+    #####:  240:            return TEQUAL;
+        -:  241:        case '>':
+    #####:  242:            switch (cbuf) {
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  243:                case '=':
+    #####:  244:                    cbuf = (char) fgetc(fp);
+    #####:  245:                    return TGREQ;
+        -:  246:                case EOF:
+    #####:  247:                    return -1;
+        -:  248:                default:
+    #####:  249:                    return TGR;
+        -:  250:            }
+        -:  251:        case '[':
+    #####:  252:            return TLSQPAREN;
+        -:  253:        case ']':
+    #####:  254:            return TRSQPAREN;
+        -:  255:        default:
+    #####:  256:            error("symbol error.");
+    #####:  257:            return -1;
+        -:  258:    }
+    #####:  259:}
+        -:  260:
+function get_linenum called 0 returned 0% blocks executed 0%
+    #####:  261:int get_linenum(void) {
+    #####:  262:    return linenum;
+        -:  263:}
+        -:  264:
+function end_scan called 0 returned 0% blocks executed 0%
+    #####:  265:void end_scan(FILE *fp) {
+    #####:  266:    if (fclose(fp) == EOF) {
+branch  0 never executed
+branch  1 never executed
+    #####:  267:        error("File can not close.");
+    #####:  268:    };
+    #####:  269:}
+        -:  270:
+function next_buf called 0 returned 0% blocks executed 0%
+    #####:  271:void next_buf(FILE *fp)
+        -:  272:{
+    #####:  273:    cbuf = (char) fgetc(fp);
+    #####:  274:}

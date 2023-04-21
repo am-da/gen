@@ -1,0 +1,1107 @@
+        -:    0:Source:print.c
+        -:    0:Graph:print.gcno
+        -:    0:Data:print.gcda
+        -:    0:Runs:45
+        -:    0:Programs:1
+        -:    1:#include "print.h"
+        -:    2:
+        -:    3:int empty_statement = 0;
+        -:    4:int iteration = 0;
+        -:    5:int token = 0;
+        -:    6:int indent = 0;
+        -:    7:
+        -:    8:char *tokenstr[MAXTOKEN + 1] = {
+        -:    9:        "",
+        -:   10:        "NAME", "program", "var", "array", "of", "begin", "end", "if", "then",
+        -:   11:        "else", "procedure", "return", "call", "while", "do", "not", "or",
+        -:   12:        "div", "and", "char", "integer", "boolean", "readln", "writeln", "true",
+        -:   13:        "false", "NUMBER", "STRING", "+", "-", "*", "=", "<>", "<", "<=", ">",
+        -:   14:        ">=", "(", ")", "[", "]", ":=", ".", ",", ":", ";", "read", "write", "break"
+        -:   15:};
+        -:   16:
+function parse_program called 40 returned 100% blocks executed 91%
+       40:   17:int parse_program(FILE *fp) {
+       40:   18:    if (token != TPROGRAM) { return (error("Keyword error 'program'")); }
+branch  0 taken 5%
+branch  1 taken 95%
+       38:   19:    printf("%s ", tokenstr[token]);
+       38:   20:    token = scan(fp);
+        -:   21:
+       38:   22:    if (token != TNAME) { return (error("not found program name")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       38:   23:    printf("%s ", string_attr);
+       38:   24:    token = scan(fp);
+        -:   25:
+       38:   26:    if (token != TSEMI) { return (error("not found semicolon ")); }
+branch  0 taken 3%
+branch  1 taken 97%
+       37:   27:    printf("%s\n", tokenstr[token]);
+       37:   28:    token = scan(fp);
+        -:   29:
+       37:   30:    if (block(fp) == ERROR) { return ERROR; }
+branch  0 taken 68%
+branch  1 taken 32%
+        -:   31:
+       12:   32:    if (token != TDOT) { return (error("not found period ")); }
+branch  0 taken 17%
+branch  1 taken 83%
+       10:   33:    printf("\b%s\n", tokenstr[token]);
+       10:   34:    token = scan(fp);
+        -:   35:
+       10:   36:    return NORMAL;
+       40:   37:}
+        -:   38://
+function block called 37 returned 100% blocks executed 94%
+       37:   39:int block(FILE *fp) {
+       74:   40:    while ((token == TVAR) || (token == TPROCEDURE)) {
+branch  0 taken 42%
+branch  1 taken 58%
+branch  2 taken 27%
+branch  3 taken 73%
+       54:   41:        if (token ==  TVAR){
+branch  0 taken 57%
+branch  1 taken 43%
+       31:   42:            indent++;
+       31:   43:            indent_do();
+       31:   44:            if (variable_declaration(fp) == ERROR)  return ERROR;
+branch  0 taken 77%
+branch  1 taken 23%
+       24:   45:            indent--;
+       24:   46:        }
+       23:   47:        else if(token ==TPROCEDURE){
+branch  0 taken 100%
+branch  1 taken 0%
+       23:   48:            indent++;
+       23:   49:            indent_do();
+       23:   50:            if (subprogram_declaration(fp) == ERROR)  return ERROR;
+branch  0 taken 57%
+branch  1 taken 43%
+       13:   51:            indent--;
+       13:   52:        }
+        -:   53:        else{
+    #####:   54:            break;
+        -:   55:        }
+        -:   56:    }
+       20:   57:    if (compound_statement(fp) == ERROR)  return ERROR;
+branch  0 taken 40%
+branch  1 taken 60%
+        -:   58:
+       12:   59:    return NORMAL;
+       37:   60:}
+        -:   61:
+function variable_declaration called 42 returned 100% blocks executed 69%
+       42:   62:int variable_declaration(FILE *fp) {
+       42:   63:    if (token != TVAR)  return (error("Keyword error 'var' "));
+branch  0 taken 0%
+branch  1 taken 100%
+       42:   64:    printf("%s ", tokenstr[token]);
+       42:   65:    token = scan(fp);
+        -:   66:
+       42:   67:    if (variable_names(fp) == ERROR)  return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        -:   68:
+       42:   69:    if (token != TCOLON) { return (error("Symbol error ':' ")); }
+branch  0 taken 5%
+branch  1 taken 95%
+       40:   70:    printf("%s ", tokenstr[token]);
+       40:   71:    token = scan(fp);
+        -:   72:
+       40:   73:    if (type(fp) == ERROR) { return ERROR; }
+branch  0 taken 13%
+branch  1 taken 88%
+        -:   74:
+       35:   75:    if (token != TSEMI)  return (error("Symbol error ';' "));
+branch  0 taken 0%
+branch  1 taken 100%
+       35:   76:    printf("\b%s\n", tokenstr[token]);
+       35:   77:    token = scan(fp);
+        -:   78:
+       49:   79:    while (token == TNAME) {
+branch  0 taken 29%
+branch  1 taken 71%
+       14:   80:        indent++;
+       14:   81:        indent_do();
+        -:   82:
+       14:   83:        if (variable_names(fp) == ERROR) return ERROR;
+branch  0 taken 100%
+branch  1 taken 0%
+        -:   84:
+       14:   85:        if (token != TCOLON) return (error("Symbol error ':' "));
+branch  0 taken 100%
+branch  1 taken 0%
+       14:   86:        printf("%s ", tokenstr[token]);
+       14:   87:        token = scan(fp);
+        -:   88:
+       14:   89:        if (type(fp) == ERROR)  return ERROR;
+branch  0 taken 100%
+branch  1 taken 0%
+        -:   90:
+       14:   91:        if (token != TSEMI)  return (error("Symbol error ';' "));
+branch  0 taken 100%
+branch  1 taken 0%
+       14:   92:        printf("\b%s\n", tokenstr[token]);
+       14:   93:        token = scan(fp);
+       14:   94:        indent--;
+        -:   95:    }
+       35:   96:    return NORMAL;
+       42:   97:}
+        -:   98:
+function variable_names called 75 returned 100% blocks executed 77%
+       75:   99:int variable_names(FILE *fp) {
+       75:  100:    if (variable_name(fp) == ERROR) return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  101:
+      146:  102:    while (token == TCOMMA) {
+branch  0 taken 49%
+branch  1 taken 51%
+       71:  103:        printf("\b%s ", tokenstr[token]);
+       71:  104:        token = scan(fp);
+        -:  105:
+       71:  106:        if (variable_name(fp) == ERROR)  return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  107:    }
+       75:  108:    return NORMAL;
+       75:  109:}
+        -:  110:
+function variable_name called 481 returned 100% blocks executed 75%
+      481:  111:int variable_name(FILE *fp) {
+      481:  112:    if (token != TNAME) return (error("not found name"));
+branch  0 taken 0%
+branch  1 taken 100%
+      481:  113:    printf("%s ", string_attr);
+      481:  114:    token = scan(fp);
+        -:  115:
+      481:  116:    return NORMAL;
+      481:  117:}
+        -:  118://
+function type called 72 returned 100% blocks executed 92%
+       72:  119:int type(FILE *fp) {
+       72:  120:    if (token == TINTEGER || token == TBOOLEAN || token == TCHAR) {
+branch  0 taken 38%
+branch  1 taken 63%
+branch  2 taken 85%
+branch  3 taken 15%
+branch  4 taken 35%
+branch  5 taken 65%
+       57:  121:        if (standard_type(fp) == ERROR)  return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+       57:  122:    }
+       15:  123:    else if(token == TARRAY){
+branch  0 taken 93%
+branch  1 taken 7%
+       14:  124:        if (array_type(fp) == ERROR)  return ERROR;
+branch  0 taken 29%
+branch  1 taken 71%
+       10:  125:    }
+        -:  126:    else{
+        1:  127:            return (error("not found Type"));
+        -:  128:    }
+       67:  129:    return NORMAL;
+       72:  130:}
+        -:  131://?
+function standard_type called 78 returned 100% blocks executed 100%
+       78:  132:int standard_type(FILE *fp) {
+       78:  133:    if (token == TINTEGER || token == TBOOLEAN || token == TCHAR){
+branch  0 taken 33%
+branch  1 taken 67%
+branch  2 taken 81%
+branch  3 taken 19%
+branch  4 taken 95%
+branch  5 taken 5%
+       77:  134:        printf("%s ", tokenstr[token]);
+       77:  135:        token = scan(fp);
+       77:  136:    }
+        -:  137:    else{
+        1:  138:        return (error("not found Standard type "));
+        -:  139:    }
+       77:  140:    return NORMAL;
+       78:  141:}
+        -:  142:
+function array_type called 14 returned 100% blocks executed 85%
+       14:  143:int array_type(FILE *fp) {
+       14:  144:    if (token != TARRAY) return (error("Keyword error 'array' "));
+branch  0 taken 0%
+branch  1 taken 100%
+       14:  145:    printf("%s ", tokenstr[token]);
+       14:  146:    token = scan(fp);
+        -:  147:
+       14:  148:    if (token != TLSQPAREN) return (error(" Symbol error '[' "));
+branch  0 taken 7%
+branch  1 taken 93%
+       13:  149:    printf("%s ", tokenstr[token]);
+       13:  150:    token = scan(fp);
+        -:  151:
+       13:  152:    if (token != TNUMBER)  return (error("not found number"));
+branch  0 taken 8%
+branch  1 taken 92%
+       12:  153:    printf("%s ", string_attr);
+       12:  154:    token = scan(fp);
+        -:  155:
+       12:  156:    if (token != TRSQPAREN)  return (error("Symbol error ']'"));
+branch  0 taken 0%
+branch  1 taken 100%
+       12:  157:    printf("%s ", tokenstr[token]);
+       12:  158:    token = scan(fp);
+        -:  159:
+       12:  160:    if (token != TOF) return (error("Keyword error 'of'"));
+branch  0 taken 8%
+branch  1 taken 92%
+       11:  161:    printf("%s ", tokenstr[token]);
+       11:  162:    token = scan(fp);
+        -:  163:
+       11:  164:    if (standard_type(fp) == ERROR)  return ERROR;
+branch  0 taken 9%
+branch  1 taken 91%
+        -:  165:
+       10:  166:    return NORMAL;
+       14:  167:}
+        -:  168:
+function subprogram_declaration called 23 returned 100% blocks executed 85%
+       23:  169:int subprogram_declaration(FILE *fp) {
+       23:  170:    if (token != TPROCEDURE)  return (error("Keyword error 'procedure'"));
+branch  0 taken 0%
+branch  1 taken 100%
+       23:  171:    printf("%s ", tokenstr[token]);
+       23:  172:    token = scan(fp);
+        -:  173:
+       23:  174:    if (procedure_name(fp) == ERROR) return ERROR;
+branch  0 taken 4%
+branch  1 taken 96%
+        -:  175:
+       22:  176:    if (token == TLPAREN) {
+branch  0 taken 14%
+branch  1 taken 86%
+       19:  177:        if (formal_parameters(fp) == ERROR)  return ERROR;
+branch  0 taken 11%
+branch  1 taken 89%
+       17:  178:    }
+        -:  179:
+       20:  180:    if (token != TSEMI)  return (error("Symbol error ';' "));
+branch  0 taken 5%
+branch  1 taken 95%
+       19:  181:    printf("\b%s\n", tokenstr[token]);
+       19:  182:    token = scan(fp);
+        -:  183:
+       19:  184:    if (token == TVAR) {
+branch  0 taken 42%
+branch  1 taken 58%
+       11:  185:        indent_do();
+       11:  186:        if (variable_declaration(fp) == ERROR) return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+       11:  187:    }
+       19:  188:    indent_do();
+       19:  189:    if (compound_statement(fp) == ERROR) return ERROR;
+branch  0 taken 32%
+branch  1 taken 68%
+        -:  190:
+       13:  191:    if (token != TSEMI)  return (error("Symbol error ';' "));
+branch  0 taken 0%
+branch  1 taken 100%
+       13:  192:    printf("\b%s\n", tokenstr[token]);
+       13:  193:    token = scan(fp);
+        -:  194:
+       13:  195:    return NORMAL;
+       23:  196:}
+        -:  197:
+function procedure_name called 50 returned 100% blocks executed 100%
+       50:  198:int procedure_name(FILE *fp) {
+       50:  199:    if (token != TNAME)  return (error("not found procedure name"));
+branch  0 taken 2%
+branch  1 taken 98%
+       49:  200:    printf("%s ", string_attr);
+       49:  201:    token = scan(fp);
+        -:  202:
+       49:  203:    return NORMAL;
+       50:  204:}
+        -:  205:
+function formal_parameters called 19 returned 100% blocks executed 52%
+       19:  206:int formal_parameters(FILE *fp) {
+       19:  207:    if (token != TLPAREN) { return (error("Symbol error '(' ")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       19:  208:    printf("%s ", tokenstr[token]);
+       19:  209:    token = scan(fp);
+        -:  210:
+       19:  211:    if (variable_names(fp) == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  212:
+       19:  213:    if (token != TCOLON) { return (error("Symbol error ':'")); }
+branch  0 taken 5%
+branch  1 taken 95%
+       18:  214:    printf("%s ", tokenstr[token]);
+       18:  215:    token = scan(fp);
+        -:  216:
+       18:  217:    if (type(fp) == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  218:
+       18:  219:    while (token == TSEMI) {
+branch  0 taken 0%
+branch  1 taken 100%
+    #####:  220:        printf("\b%s\t", tokenstr[token]);
+    #####:  221:        token = scan(fp);
+        -:  222:
+    #####:  223:        if (variable_names(fp) == ERROR)  return ERROR;
+branch  0 never executed
+branch  1 never executed
+        -:  224:
+    #####:  225:        if (token != TCOLON) { return (error("Symbol error ':' ")); }
+branch  0 never executed
+branch  1 never executed
+    #####:  226:        printf("%s ", tokenstr[token]);
+    #####:  227:        token = scan(fp);
+        -:  228:
+    #####:  229:        if (type(fp) == ERROR) return ERROR;
+branch  0 never executed
+branch  1 never executed
+        -:  230:    }
+        -:  231:
+       18:  232:    if (token != TRPAREN) { return (error("Symbol error ')' ")); }
+branch  0 taken 6%
+branch  1 taken 94%
+       17:  233:    printf("%s ", tokenstr[token]);
+       17:  234:    token = scan(fp);
+        -:  235:
+       17:  236:    return NORMAL;
+       19:  237:}
+        -:  238:
+function compound_statement called 66 returned 100% blocks executed 100%
+       66:  239:int compound_statement(FILE *fp) {
+       66:  240:    if (token != TBEGIN)  return (error("Keyword error 'begin' "));
+branch  0 taken 3%
+branch  1 taken 97%
+       64:  241:    printf("%s\n", tokenstr[token]);
+       64:  242:    token = scan(fp);
+       64:  243:    indent++;
+       64:  244:    indent_do();
+       64:  245:    if (statement(fp) == ERROR)  return ERROR;
+branch  0 taken 6%
+branch  1 taken 94%
+        -:  246:
+      203:  247:    while (token == TSEMI) {
+branch  0 taken 74%
+branch  1 taken 26%
+      151:  248:        printf("\b%s\n", tokenstr[token]); //;
+      151:  249:        token = scan(fp);
+      151:  250:        if (token != TEND){
+branch  0 taken 9%
+branch  1 taken 91%
+      137:  251:            indent_do();
+      137:  252:        }
+      151:  253:        if (statement(fp) == ERROR) { return ERROR; }
+branch  0 taken 95%
+branch  1 taken 5%
+        -:  254:    }
+        -:  255:
+       52:  256:    if (token != TEND) return (error("Keyword error 'end' "));
+branch  0 taken 6%
+branch  1 taken 94%
+       49:  257:    indent--;
+       49:  258:    if (empty_statement == 1) {
+branch  0 taken 31%
+branch  1 taken 69%
+       15:  259:        empty_statement = 0;
+       15:  260:    } else {
+       34:  261:        printf("\n");
+        -:  262:    }
+       49:  263:    indent_do();
+       49:  264:    printf("%s ", tokenstr[token]);
+       49:  265:    token = scan(fp);
+        -:  266:
+       49:  267:    return NORMAL;
+       66:  268:}
+        -:  269://
+function statement called 282 returned 100% blocks executed 97%
+      282:  270:int statement(FILE *fp) {
+      282:  271:    if (token == TNAME){
+branch  0 taken 30%
+branch  1 taken 70%
+       85:  272:        if (assignment_statement(fp) == ERROR)  return ERROR;
+branch  0 taken 1%
+branch  1 taken 99%
+       84:  273:    }
+      197:  274:    else if (token == TIF){
+branch  0 taken 18%
+branch  1 taken 82%
+       36:  275:        if (condition_statement(fp) == ERROR)  return ERROR;
+branch  0 taken 17%
+branch  1 taken 83%
+       30:  276:    }
+      161:  277:    else if (token == TWHILE){
+branch  0 taken 8%
+branch  1 taken 92%
+       13:  278:        if (iteration_statement(fp) == ERROR) return ERROR;
+branch  0 taken 23%
+branch  1 taken 77%
+       10:  279:    }
+      148:  280:    else if (token == TBREAK){
+branch  0 taken 3%
+branch  1 taken 97%
+        5:  281:        if (exit_statement(fp) == ERROR) return ERROR;
+branch  0 taken 20%
+branch  1 taken 80%
+        4:  282:    }
+      143:  283:    else if (token == TCALL){
+branch  0 taken 19%
+branch  1 taken 81%
+       27:  284:        if (call_statement(fp) == ERROR) return ERROR;
+branch  0 taken 7%
+branch  1 taken 93%
+       25:  285:    }
+      116:  286:    else if (token == TRETURN){
+branch  0 taken 2%
+branch  1 taken 98%
+        2:  287:        if (return_statement(fp) == ERROR)  return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        2:  288:    }
+      114:  289:    else if (token == TREAD || token == TREADLN){
+branch  0 taken 100%
+branch  1 taken 0%
+branch  2 taken 5%
+branch  3 taken 95%
+        6:  290:        if (input_statement(fp) == ERROR)  return ERROR;
+branch  0 taken 17%
+branch  1 taken 83%
+        5:  291:    }
+      108:  292:    else if (token == TWRITE || token == TWRITELN){
+branch  0 taken 97%
+branch  1 taken 3%
+branch  2 taken 39%
+branch  3 taken 61%
+       44:  293:        if (output_statement(fp) == ERROR)  return ERROR;
+branch  0 taken 5%
+branch  1 taken 95%
+       42:  294:    }
+       64:  295:    else if (token == TBEGIN){
+branch  0 taken 42%
+branch  1 taken 58%
+       27:  296:        if (compound_statement(fp) == ERROR) return ERROR;
+branch  0 taken 11%
+branch  1 taken 89%
+       24:  297:    }
+        -:  298:    else{
+       37:  299:        empty_statement = 1;
+        -:  300:    }
+      263:  301:    return NORMAL;
+      282:  302:}
+        -:  303:
+function condition_statement called 36 returned 100% blocks executed 82%
+       36:  304:int condition_statement(FILE *fp) {
+       36:  305:    if (token != TIF) return (error("Keyword error 'if' "));
+branch  0 taken 0%
+branch  1 taken 100%
+       36:  306:    printf("%s ", tokenstr[token]);
+       36:  307:    token = scan(fp);
+        -:  308:
+       36:  309:    if (expression(fp) == ERROR)  return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  310:
+       36:  311:    if (token != TTHEN) return (error("Keyword error 'then' "));
+branch  0 taken 3%
+branch  1 taken 97%
+       35:  312:    printf("%s\n", tokenstr[token]);
+       35:  313:    token = scan(fp);
+       35:  314:    indent++;
+       35:  315:    indent_do();
+       35:  316:    if (statement(fp) == ERROR) return ERROR;
+branch  0 taken 3%
+branch  1 taken 97%
+       34:  317:    indent--;
+        -:  318:
+       34:  319:    if (token == TELSE) {
+branch  0 taken 41%
+branch  1 taken 59%
+       20:  320:        if (empty_statement == 1) {
+branch  0 taken 0%
+branch  1 taken 100%
+    #####:  321:            empty_statement = 0;
+    #####:  322:            printf("\r");
+    #####:  323:        } else {
+       20:  324:            printf("\n");
+        -:  325:        }
+       20:  326:        indent_do();
+       20:  327:        printf("%s\n", tokenstr[token]);
+       20:  328:        token = scan(fp);
+       20:  329:        indent++;
+       20:  330:        indent_do();
+       20:  331:        if (statement(fp) == ERROR)  return ERROR;
+branch  0 taken 20%
+branch  1 taken 80%
+       16:  332:        indent--;
+       16:  333:    }
+       30:  334:    return NORMAL;
+       36:  335:}
+        -:  336:
+function iteration_statement called 13 returned 100% blocks executed 80%
+       13:  337:int iteration_statement(FILE *fp) {
+       13:  338:    if (token != TWHILE) return (error("Keyword error  'while' "));
+branch  0 taken 0%
+branch  1 taken 100%
+       13:  339:    printf("%s ", tokenstr[token]);
+       13:  340:    token = scan(fp);
+        -:  341:
+       13:  342:    if (expression(fp) == ERROR) return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  343:
+       13:  344:    if (token != TDO) return (error("Keyword error 'do'"));
+branch  0 taken 8%
+branch  1 taken 92%
+       12:  345:    printf("%s\n", tokenstr[token]);
+       12:  346:    token = scan(fp);
+       12:  347:    iteration++;
+       12:  348:    indent_do();
+       12:  349:    if (statement(fp) == ERROR)  return ERROR;
+branch  0 taken 17%
+branch  1 taken 83%
+       10:  350:    iteration--;
+        -:  351:
+       10:  352:    return NORMAL;
+       13:  353:}
+        -:  354:
+function exit_statement called 5 returned 100% blocks executed 85%
+        5:  355:int exit_statement(FILE *fp) {
+        5:  356:    if (token != TBREAK)  return (error("Keyword error 'break'"));
+branch  0 taken 0%
+branch  1 taken 100%
+        5:  357:    if (iteration > 0) {
+branch  0 taken 20%
+branch  1 taken 80%
+        4:  358:        printf("%s ", tokenstr[token]);
+        4:  359:        token = scan(fp);
+        4:  360:    } else {
+        1:  361:        return error("Keyword error'break' ");
+        -:  362:    }
+        4:  363:    return NORMAL;
+        5:  364:}
+        -:  365:
+function call_statement called 27 returned 100% blocks executed 83%
+       27:  366:int call_statement(FILE *fp) {
+       27:  367:    if (token != TCALL) return (error("Keyword error 'call' "));
+branch  0 taken 0%
+branch  1 taken 100%
+       27:  368:    printf("%s ", tokenstr[token]);
+       27:  369:    token = scan(fp);
+        -:  370:
+       27:  371:    if (procedure_name(fp) == ERROR)  return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  372:
+       27:  373:    if (token == TLPAREN) {
+branch  0 taken 7%
+branch  1 taken 93%
+       25:  374:        printf("%s ", tokenstr[token]);
+       25:  375:        token = scan(fp);
+        -:  376:
+       25:  377:        if (expressions(fp) == ERROR) return ERROR;
+branch  0 taken 4%
+branch  1 taken 96%
+        -:  378:
+       24:  379:        if (token != TRPAREN) return (error("Symbol error ')'"));
+branch  0 taken 4%
+branch  1 taken 96%
+       23:  380:        printf("%s ", tokenstr[token]);
+       23:  381:        token = scan(fp);
+       23:  382:    }
+       25:  383:    return NORMAL;
+       27:  384:}
+        -:  385://
+function expressions called 25 returned 100% blocks executed 81%
+       25:  386:int expressions(FILE *fp) {
+       25:  387:    if (expression(fp) == ERROR)  return ERROR;
+branch  0 taken 4%
+branch  1 taken 96%
+        -:  388:
+       71:  389:    while (token == TCOMMA) {
+branch  0 taken 66%
+branch  1 taken 34%
+       47:  390:        if(token != TCOMMA) return(error("not found commma "));
+branch  0 taken 100%
+branch  1 taken 0%
+       47:  391:        printf("\b%s ", tokenstr[token]);
+       47:  392:        token = scan(fp);
+        -:  393:
+       47:  394:        if (expression(fp) == ERROR)  return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  395:    }
+       24:  396:    return NORMAL;
+       25:  397:}
+        -:  398:
+function return_statement called 2 returned 100% blocks executed 75%
+        2:  399:int return_statement(FILE *fp) {
+        2:  400:    if (token != TRETURN)  return (error("Keyword error 'return' "));
+branch  0 taken 0%
+branch  1 taken 100%
+        2:  401:    printf("%s ", tokenstr[token]);
+        2:  402:    token = scan(fp);
+        -:  403:
+        2:  404:    return NORMAL;
+        2:  405:}
+        -:  406:
+function assignment_statement called 85 returned 100% blocks executed 75%
+       85:  407:int assignment_statement(FILE *fp) {
+       85:  408:    if (left_part(fp) == ERROR)  return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  409:
+       85:  410:    if (token != TASSIGN) return (error("Symbol error ':=' "));
+branch  0 taken 0%
+branch  1 taken 100%
+       85:  411:    printf("%s ", tokenstr[token]);
+       85:  412:    token = scan(fp);
+        -:  413:
+       85:  414:    if (expression(fp) == ERROR)  return ERROR;
+branch  0 taken 1%
+branch  1 taken 99%
+        -:  415:
+       84:  416:    return NORMAL;
+       85:  417:}
+        -:  418:
+function left_part called 85 returned 100% blocks executed 75%
+       85:  419:int left_part(FILE *fp) {
+       85:  420:    if (variable(fp) == ERROR)  return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+       85:  421:    return NORMAL;
+       85:  422:}
+        -:  423:
+function variable called 335 returned 100% blocks executed 40%
+      335:  424:int variable(FILE *fp) {
+      335:  425:    if (variable_name(fp) == ERROR)  return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  426:
+      335:  427:    if (token == TLSQPAREN) {
+branch  0 taken 100%
+branch  1 taken 0%
+    #####:  428:        printf("%s ", tokenstr[token]);
+    #####:  429:        token = scan(fp);
+        -:  430:
+    #####:  431:        if (expression(fp) == ERROR)  return ERROR;
+branch  0 never executed
+branch  1 never executed
+        -:  432:
+    #####:  433:        if (token != TRSQPAREN) {
+branch  0 never executed
+branch  1 never executed
+    #####:  434:            return (error("Symbol error ']' "));
+        -:  435:        }
+    #####:  436:        printf("%s ", tokenstr[token]);
+    #####:  437:        token = scan(fp);
+    #####:  438:    }
+      335:  439:    return NORMAL;
+      335:  440:}
+        -:  441:
+function expression called 262 returned 100% blocks executed 88%
+      262:  442:int expression(FILE *fp) {
+      262:  443:    if (simple_expression(fp) == ERROR) return ERROR;
+branch  0 taken 1%
+branch  1 taken 99%
+        -:  444:
+      311:  445:    while ((token == TEQUAL) || (token == TNOTEQ) || (token == TLE) || (token == TLEEQ) || (token == TGR) ||
+branch  0 taken 91%
+branch  1 taken 9%
+branch  2 taken 99%
+branch  3 taken 1%
+branch  4 taken 97%
+branch  5 taken 3%
+branch  6 taken 100%
+branch  7 taken 0%
+branch  8 taken 2%
+branch  9 taken 98%
+branch 10 taken 16%
+branch 11 taken 84%
+      264:  446:           (token == TGREQ)) {
+       51:  447:        if (relational_operator(fp) == ERROR)  return ERROR;
+branch  0 taken 100%
+branch  1 taken 0%
+        -:  448:
+       51:  449:        if (simple_expression(fp) == ERROR)  return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  450:    }
+      260:  451:    return NORMAL;
+      262:  452:}
+        -:  453://
+function simple_expression called 313 returned 100% blocks executed 88%
+      313:  454:int simple_expression(FILE *fp) {
+      313:  455:    if (token == TPLUS || token == TMINUS){
+branch  0 taken 100%
+branch  1 taken 0%
+branch  2 taken 1%
+branch  3 taken 99%
+        4:  456:        printf("%s ", tokenstr[token]);
+        4:  457:        token = scan(fp);
+        4:  458:    }
+      313:  459:    if (term(fp) == ERROR) return ERROR;
+branch  0 taken 1%
+branch  1 taken 99%
+        -:  460:
+      337:  461:    while ((token == TPLUS) || (token == TMINUS) || (token == TOR)) {
+branch  0 taken 96%
+branch  1 taken 4%
+branch  2 taken 2%
+branch  3 taken 98%
+branch  4 taken 8%
+branch  5 taken 92%
+       26:  462:        if (additive_operator(fp) == ERROR) return ERROR;
+branch  0 taken 100%
+branch  1 taken 0%
+        -:  463:
+       26:  464:        if (term(fp) == ERROR) return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  465:    }
+      311:  466:    return NORMAL;
+      313:  467:}
+        -:  468:
+function term called 339 returned 100% blocks executed 85%
+      339:  469:int term(FILE *fp) {
+      339:  470:    if (factor(fp) == ERROR)  return ERROR;
+branch  0 taken 1%
+branch  1 taken 99%
+        -:  471:
+      366:  472:    while (token == TSTAR || token == TDIV || token == TAND) {
+branch  0 taken 96%
+branch  1 taken 4%
+branch  2 taken 5%
+branch  3 taken 95%
+branch  4 taken 8%
+branch  5 taken 92%
+       29:  473:        if (multiplicative_operator(fp) == ERROR)  return ERROR;
+branch  0 taken 100%
+branch  1 taken 0%
+        -:  474:
+       29:  475:        if (factor(fp) == ERROR)  return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  476:    }
+      337:  477:    return NORMAL;
+      339:  478:}
+        -:  479:
+function factor called 370 returned 100% blocks executed 80%
+      370:  480:int factor(FILE *fp) {
+      370:  481:    if (token == TNAME){
+branch  0 taken 35%
+branch  1 taken 65%
+      241:  482:        if (variable(fp) == ERROR) return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+      241:  483:    }
+      129:  484:    else if (token == TNUMBER || token == TFALSE || token == TTRUE || token == TSTRING){
+branch  0 taken 47%
+branch  1 taken 53%
+branch  2 taken 93%
+branch  3 taken 7%
+branch  4 taken 95%
+branch  5 taken 5%
+branch  6 taken 39%
+branch  7 taken 61%
+       96:  485:        if (constant(fp) == ERROR) return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+       96:  486:    }
+       33:  487:    else if(token == TLPAREN){
+branch  0 taken 61%
+branch  1 taken 39%
+       20:  488:        printf("%s ", tokenstr[token]);
+       20:  489:        token = scan(fp);
+        -:  490:        
+       20:  491:        if (expression(fp) == ERROR) return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  492:        
+       20:  493:        if (token != TRPAREN) {
+branch  0 taken 5%
+branch  1 taken 95%
+        1:  494:            return (error("Symbol ')' "));
+        -:  495:        }
+       19:  496:        printf("%s ", tokenstr[token]);
+       19:  497:        token = scan(fp);
+       19:  498:    }
+       13:  499:    else if (token == TNOT){
+branch  0 taken 15%
+branch  1 taken 85%
+        2:  500:        printf("%s ", tokenstr[token]);
+        2:  501:        token = scan(fp);
+        -:  502:        
+        2:  503:        if (factor(fp) == ERROR) return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        2:  504:    }
+       11:  505:    else if (token == TINTEGER || token == TBOOLEAN || token == TCHAR){
+branch  0 taken 36%
+branch  1 taken 64%
+branch  2 taken 75%
+branch  3 taken 25%
+branch  4 taken 67%
+branch  5 taken 33%
+       10:  506:        if (standard_type(fp) == ERROR)  return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  507:        
+       10:  508:        if (token != TLPAREN) {
+branch  0 taken 0%
+branch  1 taken 100%
+    #####:  509:            return (error("Symbol error '(' "));
+        -:  510:        }
+       10:  511:        printf("%s ", tokenstr[token]);
+       10:  512:        token = scan(fp);
+        -:  513:        
+       10:  514:        if (expression(fp) == ERROR) return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  515:        
+       10:  516:        if (token != TRPAREN) {
+branch  0 taken 0%
+branch  1 taken 100%
+    #####:  517:            return (error("Symbol error ')' "));
+        -:  518:        }
+       10:  519:        printf("%s ", tokenstr[token]);
+       10:  520:        token = scan(fp);
+       10:  521:    }
+        -:  522:    else{
+        1:  523:        return (error("not found factor"));
+        -:  524:    }
+      368:  525:    return NORMAL;
+      370:  526:}
+        -:  527://
+function constant called 96 returned 100% blocks executed 91%
+       96:  528:int constant(FILE *fp) {
+       96:  529:    if (token == TNUMBER){
+branch  0 taken 71%
+branch  1 taken 29%
+       68:  530:        printf("%s ", string_attr);
+       68:  531:        token = scan(fp);
+       68:  532:    }
+       28:  533:    else if(token == TFALSE || token == TTRUE){
+branch  0 taken 86%
+branch  1 taken 14%
+branch  2 taken 13%
+branch  3 taken 88%
+        7:  534:        printf("%s ", tokenstr[token]);
+        7:  535:        token = scan(fp);
+        7:  536:    }
+       21:  537:    else if (token == TSTRING){
+branch  0 taken 100%
+branch  1 taken 0%
+       21:  538:        printf("'%s' ", string_attr);
+       21:  539:        token = scan(fp);
+       21:  540:    }
+        -:  541:    else{
+    #####:  542:        return (error("not found Constant"));
+        -:  543:    }
+       96:  544:    return NORMAL;
+       96:  545:}
+        -:  546://
+function multiplicative_operator called 29 returned 100% blocks executed 71%
+       29:  547:int multiplicative_operator(FILE *fp) {
+       29:  548:    if (token == TSTAR || token == TDIV || token == TAND){
+branch  0 taken 55%
+branch  1 taken 45%
+branch  2 taken 0%
+branch  3 taken 100%
+branch  4 never executed
+branch  5 never executed
+       29:  549:        printf("%s ", tokenstr[token]);
+       29:  550:        token = scan(fp);
+       29:  551:    }
+        -:  552:    else{
+    #####:  553:        return (error("not found multiplicative operator"));
+        -:  554:    }
+       29:  555:    return NORMAL;
+       29:  556:}
+        -:  557://
+function additive_operator called 26 returned 100% blocks executed 85%
+       26:  558:int additive_operator(FILE *fp) {
+       26:  559:    if (token == TPLUS || token == TMINUS || token == TOR){
+branch  0 taken 50%
+branch  1 taken 50%
+branch  2 taken 38%
+branch  3 taken 62%
+branch  4 taken 100%
+branch  5 taken 0%
+       26:  560:        printf("%s ", tokenstr[token]);
+       26:  561:        token = scan(fp);
+       26:  562:    }
+        -:  563:    else{
+    #####:  564:        return (error("not found additive operator"));
+        -:  565:    }
+       26:  566:    return NORMAL;
+       26:  567:}
+        -:  568://
+function relational_operator called 51 returned 100% blocks executed 90%
+       51:  569:int relational_operator(FILE *fp) {
+       51:  570:    if (token ==TEQUAL || token == TNOTEQ || token == TLE || token == TLEEQ || token == TGR|| token == TGREQ){
+branch  0 taken 43%
+branch  1 taken 57%
+branch  2 taken 86%
+branch  3 taken 14%
+branch  4 taken 53%
+branch  5 taken 47%
+branch  6 taken 100%
+branch  7 taken 0%
+branch  8 taken 40%
+branch  9 taken 60%
+branch 10 taken 100%
+branch 11 taken 0%
+       51:  571:        printf("%s ", tokenstr[token]);
+       51:  572:        token = scan(fp);
+       51:  573:    }
+        -:  574:    else{
+    #####:  575:        return (error("not found　relational operator "));
+        -:  576:    }
+       51:  577:    return NORMAL;
+       51:  578:}
+        -:  579://
+function input_statement called 6 returned 100% blocks executed 82%
+        6:  580:int input_statement(FILE *fp) {
+        6:  581:    if (token == TREAD || token == TREADLN){
+branch  0 taken 100%
+branch  1 taken 0%
+branch  2 taken 100%
+branch  3 taken 0%
+        6:  582:        printf("%s ", tokenstr[token]);
+        6:  583:        token = scan(fp);
+        6:  584:    }
+        -:  585:    else{
+    #####:  586:        return (error("Keyword error not found　'read', 'readln'"));
+        -:  587:    }
+        -:  588:
+        6:  589:    if (token == TLPAREN) {
+branch  0 taken 0%
+branch  1 taken 100%
+        6:  590:        printf("%s ", tokenstr[token]);
+        6:  591:        token = scan(fp);
+        -:  592:
+        6:  593:        if (variable(fp) == ERROR) return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  594:
+        9:  595:        while (token == TCOMMA) {
+branch  0 taken 33%
+branch  1 taken 67%
+        3:  596:            printf("%s ", tokenstr[token]);
+        3:  597:            token = scan(fp);
+        -:  598:
+        3:  599:            if (variable(fp) == ERROR) return ERROR;
+branch  0 taken 100%
+branch  1 taken 0%
+        -:  600:        }
+        6:  601:        if (token != TRPAREN) { return (error("Symbol error not found　')' ")); }
+branch  0 taken 17%
+branch  1 taken 83%
+        5:  602:        printf("%s ", tokenstr[token]);
+        5:  603:        token = scan(fp);
+        5:  604:    }
+        5:  605:    return NORMAL;
+        6:  606:}
+        -:  607://
+function output_statement called 44 returned 100% blocks executed 82%
+       44:  608:int output_statement(FILE *fp) {
+       44:  609:    if (token == TWRITE || token == TWRITELN){
+branch  0 taken 93%
+branch  1 taken 7%
+branch  2 taken 100%
+branch  3 taken 0%
+       44:  610:        printf("%s ", tokenstr[token]);
+       44:  611:        token = scan(fp);
+       44:  612:    }
+        -:  613:    else{
+    #####:  614:        return (error("Keyword error not found 'write', 'writeln'"));
+        -:  615:    }
+        -:  616:
+       44:  617:    if (token == TLPAREN) {
+branch  0 taken 7%
+branch  1 taken 93%
+       41:  618:        printf("%s ", tokenstr[token]);
+       41:  619:        token = scan(fp);
+       41:  620:        if (output_format(fp) == ERROR) return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  621:
+       62:  622:        while (token == TCOMMA) {
+branch  0 taken 34%
+branch  1 taken 66%
+       21:  623:            printf("%s ", tokenstr[token]);
+       21:  624:            token = scan(fp);
+       21:  625:            if (output_format(fp) == ERROR) return ERROR;
+branch  0 taken 100%
+branch  1 taken 0%
+        -:  626:        }
+       41:  627:        if (token != TRPAREN) return (error("Symbol error not found　')'"));
+branch  0 taken 5%
+branch  1 taken 95%
+       39:  628:        printf("%s ", tokenstr[token]);
+       39:  629:        token = scan(fp);
+       39:  630:    }
+       42:  631:    return NORMAL;
+       44:  632:}
+        -:  633:
+function output_format called 62 returned 100% blocks executed 37%
+       62:  634:int output_format(FILE *fp) {
+       62:  635:    switch (token) {
+branch  0 taken 0%
+branch  1 taken 39%
+branch  2 taken 61%
+        -:  636:        case TSTRING:
+       38:  637:            if (strlen(string_attr) > 1) {
+branch  0 taken 95%
+branch  1 taken 5%
+       36:  638:                printf("'%s' ", string_attr);
+       36:  639:                token = scan(fp);
+       36:  640:                break;
+        -:  641:            }
+        -:  642:        case TPLUS:
+        -:  643:        case TMINUS:
+        -:  644:        case TNAME:
+        -:  645:        case TNUMBER:
+        -:  646:        case TFALSE:
+        -:  647:        case TTRUE:
+        -:  648:        case TLPAREN:
+        -:  649:        case TNOT:
+        -:  650:        case TINTEGER:
+        -:  651:        case TBOOLEAN:
+        -:  652:        case TCHAR:
+       26:  653:            if (expression(fp) == ERROR) return ERROR;
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  654:
+       26:  655:            if (token == TCOLON) {
+branch  0 taken 100%
+branch  1 taken 0%
+    #####:  656:                printf("%s ", tokenstr[token]);
+    #####:  657:                token = scan(fp);
+        -:  658:
+    #####:  659:                if (token != TNUMBER) { return (error("not found　Number")); }
+branch  0 never executed
+branch  1 never executed
+    #####:  660:                printf("%s ", string_attr);
+    #####:  661:                token = scan(fp);
+    #####:  662:            }
+       26:  663:            break;
+        -:  664:        default:
+    #####:  665:            return (error("not found　Output format"));
+        -:  666:    }
+       62:  667:    return NORMAL;
+       62:  668:}
+        -:  669:
+function indent_do called 435 returned 100% blocks executed 100%
+      435:  670:void indent_do(void) {
+      435:  671:    int k = 0;
+     1455:  672:    for (k = 0; k < indent; k++) {
+branch  0 taken 70%
+branch  1 taken 30%
+     1020:  673:        printf("    ");
+     1020:  674:    }
+      435:  675:}

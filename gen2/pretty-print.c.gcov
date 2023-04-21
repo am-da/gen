@@ -1,0 +1,1161 @@
+        -:    0:Source:pretty-print.c
+        -:    0:Graph:pretty-print.gcno
+        -:    0:Data:pretty-print.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:#include "pretty-print.h"
+        -:    2:
+        -:    3:/* Variable to store the token read by scan() */
+        -:    4:int token = 0;
+        -:    5:
+        -:    6:/* Variable to store the magnitude of the step */
+        -:    7:int paragraph_number = 0;
+        -:    8:
+        -:    9:/* Variable to store the existence of emptystatement */
+        -:   10:int existence_empty_statement = 0;
+        -:   11:
+        -:   12:/* Variable to store whether it is inside iteration */
+        -:   13:int whether_inside_iteration = 0;
+        -:   14:
+        -:   15:/* string of each token */
+        -:   16:char *tokenstr[NUMOFTOKEN + 1] = {
+        -:   17:        "",
+        -:   18:        "NAME", "program", "var", "array", "of", "begin", "end", "if", "then",
+        -:   19:        "else", "procedure", "return", "call", "while", "do", "not", "or",
+        -:   20:        "div", "and", "char", "integer", "boolean", "readln", "writeln", "true",
+        -:   21:        "false", "NUMBER", "STRING", "+", "-", "*", "=", "<>", "<", "<=", ">",
+        -:   22:        ">=", "(", ")", "[", "]", ":=", ".", ",", ":", ";", "read", "write", "break"
+        -:   23:};
+        -:   24:
+function parse_program called 18 returned 100% blocks executed 75%
+       18:   25:int parse_program() {
+       18:   26:    if (token != TPROGRAM) { return (error("Keyword 'program' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       18:   27:    printf("%s ", tokenstr[token]); //program
+       18:   28:    token = scan();
+        -:   29:
+       18:   30:    if (token != TNAME) { return (error("Program name is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       18:   31:    printf("%s", string_attr); //change
+       18:   32:    token = scan();
+        -:   33:
+       18:   34:    if (token != TSEMI) { return (error("Semicolon is not found")); }
+branch  0 taken 6%
+branch  1 taken 94%
+       17:   35:    printf("%s\n", tokenstr[token]); //;
+       17:   36:    token = scan();
+        -:   37:
+       17:   38:    if (parse_block() == ERROR) { return ERROR; }
+branch  0 taken 29%
+branch  1 taken 71%
+        -:   39:
+       12:   40:    if (token != TDOT) { return (error("Period is not found at the end of program")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       12:   41:    printf("\b%s\n", tokenstr[token]);
+       12:   42:    token = scan();
+        -:   43:
+        -:   44:
+       12:   45:    return NORMAL;
+       18:   46:}
+        -:   47:
+function parse_block called 17 returned 100% blocks executed 88%
+       17:   48:int parse_block() {
+       46:   49:    while ((token == TVAR) || (token == TPROCEDURE)) {
+branch  0 taken 37%
+branch  1 taken 63%
+branch  2 taken 65%
+branch  3 taken 35%
+       30:   50:        switch (token) {
+branch  0 taken 0%
+branch  1 taken 57%
+branch  2 taken 43%
+        -:   51:            case TVAR:
+       17:   52:                paragraph_number++;
+       17:   53:                make_paragraph();
+       17:   54:                if (parse_variable_declaration() == ERROR) { return ERROR; }
+branch  0 taken 94%
+branch  1 taken 6%
+       16:   55:                paragraph_number--;
+       16:   56:                break;
+        -:   57:            case TPROCEDURE:
+       13:   58:                paragraph_number++;
+       13:   59:                make_paragraph();
+       13:   60:                if (parse_subprogram_declaration() == ERROR) { return ERROR; }
+branch  0 taken 100%
+branch  1 taken 0%
+       13:   61:                paragraph_number--;
+       13:   62:                break;
+        -:   63:            default:
+    #####:   64:                break;
+        -:   65:        }
+        -:   66:    }
+       16:   67:    if (parse_compound_statement() == ERROR) { return ERROR; }
+branch  0 taken 25%
+branch  1 taken 75%
+        -:   68:
+       12:   69:    return NORMAL;
+       17:   70:}
+        -:   71:
+function parse_variable_declaration called 24 returned 100% blocks executed 65%
+       24:   72:int parse_variable_declaration() {
+       24:   73:    if (token != TVAR) { return (error("Keyword 'var' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       24:   74:    printf("%s ", tokenstr[token]);
+       24:   75:    token = scan();
+        -:   76:
+       24:   77:    if (parse_variable_names() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:   78:
+       24:   79:    if (token != TCOLON) { return (error("Symbol ':' is not found")); }
+branch  0 taken 4%
+branch  1 taken 96%
+       23:   80:    printf("%s ", tokenstr[token]);
+       23:   81:    token = scan();
+        -:   82:
+       23:   83:    if (parse_type() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:   84:
+       23:   85:    if (token != TSEMI) { return (error("Symbol ';' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       23:   86:    printf("\b%s\n", tokenstr[token]);
+       23:   87:    token = scan();
+        -:   88:
+       27:   89:    while (token == TNAME) {
+branch  0 taken 15%
+branch  1 taken 85%
+        4:   90:        paragraph_number++;
+        4:   91:        make_paragraph();
+        -:   92:
+        4:   93:        if (parse_variable_names() == ERROR) { return ERROR; }
+branch  0 taken 100%
+branch  1 taken 0%
+        -:   94:
+        4:   95:        if (token != TCOLON) { return (error("Symbol ':' is not found")); }
+branch  0 taken 100%
+branch  1 taken 0%
+        4:   96:        printf("%s ", tokenstr[token]);
+        4:   97:        token = scan();
+        -:   98:
+        4:   99:        if (parse_type() == ERROR) { return ERROR; }
+branch  0 taken 100%
+branch  1 taken 0%
+        -:  100:
+        4:  101:        if (token != TSEMI) { return (error("Symbol ';' is not found")); }
+branch  0 taken 100%
+branch  1 taken 0%
+        4:  102:        printf("\b%s\n", tokenstr[token]);
+        4:  103:        token = scan();
+        4:  104:        paragraph_number--;
+        -:  105:    }
+        -:  106:
+       23:  107:    return NORMAL;
+       24:  108:}
+        -:  109:
+function parse_variable_names called 39 returned 100% blocks executed 77%
+       39:  110:int parse_variable_names() {
+       39:  111:    if (parse_variable_name() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  112:
+       86:  113:    while (token == TCOMMA) {
+branch  0 taken 55%
+branch  1 taken 45%
+       47:  114:        printf("\b%s ", tokenstr[token]);
+       47:  115:        token = scan();
+        -:  116:
+       47:  117:        if (parse_variable_name() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  118:    }
+        -:  119:
+       39:  120:    return NORMAL;
+       39:  121:}
+        -:  122:
+function parse_variable_name called 364 returned 100% blocks executed 75%
+      364:  123:int parse_variable_name() {
+      364:  124:    if (token != TNAME) { return (error("Name is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+      364:  125:    printf("%s ", string_attr);
+      364:  126:    token = scan();
+        -:  127:
+      364:  128:    return NORMAL;
+      364:  129:}
+        -:  130:
+function parse_type called 38 returned 100% blocks executed 58%
+       38:  131:int parse_type() {
+       38:  132:    switch (token) {
+branch  0 taken 95%
+branch  1 taken 0%
+branch  2 taken 5%
+        -:  133:        case TINTEGER:
+        -:  134:        case TBOOLEAN:
+        -:  135:        case TCHAR:
+       36:  136:            if (parse_standard_type() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+       36:  137:            break;
+        -:  138:        case TARRAY:
+        2:  139:            if (parse_array_type() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        2:  140:            break;
+        -:  141:        default:
+    #####:  142:            return (error("Type is not found"));
+        -:  143:    }
+        -:  144:
+       38:  145:    return NORMAL;
+       38:  146:}
+        -:  147:
+function parse_standard_type called 48 returned 100% blocks executed 57%
+       48:  148:int parse_standard_type() {
+       48:  149:    switch (token) {
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  150:        case TINTEGER:
+        -:  151:        case TBOOLEAN:
+        -:  152:        case TCHAR:
+       48:  153:            printf("%s ", tokenstr[token]);
+       48:  154:            token = scan();
+       48:  155:            break;
+        -:  156:        default:
+    #####:  157:            return (error("Standard type is not found"));
+        -:  158:    }
+        -:  159:
+       48:  160:    return NORMAL;
+       48:  161:}
+        -:  162:
+function parse_array_type called 2 returned 100% blocks executed 57%
+        2:  163:int parse_array_type() {
+        2:  164:    if (token != TARRAY) { return (error("Keyword 'array' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+        2:  165:    printf("%s ", tokenstr[token]);
+        2:  166:    token = scan();
+        -:  167:
+        2:  168:    if (token != TLSQPAREN) { return (error("Symbol '[' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+        2:  169:    printf("%s ", tokenstr[token]);
+        2:  170:    token = scan();
+        -:  171:
+        2:  172:    if (token != TNUMBER) { return (error("Number is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+        2:  173:    printf("%s ", string_attr);
+        2:  174:    token = scan();
+        -:  175:
+        2:  176:    if (token != TRSQPAREN) { return (error("Symbol ']' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+        2:  177:    printf("%s ", tokenstr[token]);
+        2:  178:    token = scan();
+        -:  179:
+        2:  180:    if (token != TOF) { return (error("Keyword 'of' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+        2:  181:    printf("%s ", tokenstr[token]);
+        2:  182:    token = scan();
+        -:  183:
+        2:  184:    if (parse_standard_type() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  185:
+        2:  186:    return NORMAL;
+        2:  187:}
+        -:  188:
+function parse_subprogram_declaration called 13 returned 100% blocks executed 65%
+       13:  189:int parse_subprogram_declaration() {
+       13:  190:    if (token != TPROCEDURE) { return (error("Keyword 'procedure' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       13:  191:    printf("%s ", tokenstr[token]);
+       13:  192:    token = scan();
+        -:  193:
+       13:  194:    if (parse_procedure_name() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  195:
+       13:  196:    if (token == TLPAREN) {
+branch  0 taken 15%
+branch  1 taken 85%
+       11:  197:        if (parse_formal_parameters() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+       11:  198:    }
+        -:  199:
+       13:  200:    if (token != TSEMI) { return (error("Symbol ';' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       13:  201:    printf("\b%s\n", tokenstr[token]);
+       13:  202:    token = scan();
+        -:  203:
+       13:  204:    if (token == TVAR) {
+branch  0 taken 46%
+branch  1 taken 54%
+        7:  205:        make_paragraph();
+        7:  206:        if (parse_variable_declaration() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        7:  207:    }
+        -:  208:
+       13:  209:    make_paragraph();
+       13:  210:    if (parse_compound_statement() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  211:
+       13:  212:    if (token != TSEMI) { return (error("Symbol ';' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       13:  213:    printf("\b%s\n", tokenstr[token]);
+       13:  214:    token = scan();
+        -:  215:
+       13:  216:    return NORMAL;
+       13:  217:}
+        -:  218:
+function parse_procedure_name called 35 returned 100% blocks executed 75%
+       35:  219:int parse_procedure_name() {
+       35:  220:    if (token != TNAME) { return (error("Procedure name is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       35:  221:    printf("%s ", string_attr);
+       35:  222:    token = scan();
+        -:  223:
+       35:  224:    return NORMAL;
+       35:  225:}
+        -:  226:
+function parse_formal_parameters called 11 returned 100% blocks executed 42%
+       11:  227:int parse_formal_parameters() {
+       11:  228:    if (token != TLPAREN) { return (error("Symbol '(' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       11:  229:    printf("%s ", tokenstr[token]);
+       11:  230:    token = scan();
+        -:  231:
+       11:  232:    if (parse_variable_names() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  233:
+       11:  234:    if (token != TCOLON) { return (error("Symbol ':' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       11:  235:    printf("%s ", tokenstr[token]);
+       11:  236:    token = scan();
+        -:  237:
+       11:  238:    if (parse_type() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  239:
+       11:  240:    while (token == TSEMI) {
+branch  0 taken 0%
+branch  1 taken 100%
+    #####:  241:        printf("\b%s\t", tokenstr[token]);
+    #####:  242:        token = scan();
+        -:  243:
+    #####:  244:        if (parse_variable_names() == ERROR) { return ERROR; }
+branch  0 never executed
+branch  1 never executed
+        -:  245:
+    #####:  246:        if (token != TCOLON) { return (error("Symbol ':' is not found")); }
+branch  0 never executed
+branch  1 never executed
+    #####:  247:        printf("%s ", tokenstr[token]);
+    #####:  248:        token = scan();
+        -:  249:
+    #####:  250:        if (parse_type() == ERROR) { return ERROR; }
+branch  0 never executed
+branch  1 never executed
+        -:  251:    }
+        -:  252:
+       11:  253:    if (token != TRPAREN) { return (error("Symbol ')' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       11:  254:    printf("%s ", tokenstr[token]);
+       11:  255:    token = scan();
+        -:  256:
+       11:  257:    return NORMAL;
+       11:  258:}
+        -:  259:
+        -:  260://begin end
+function parse_compound_statement called 50 returned 100% blocks executed 90%
+       50:  261:int parse_compound_statement() {
+       50:  262:    if (token != TBEGIN) { return (error("Keyword 'begin' is not found")); }
+branch  0 taken 2%
+branch  1 taken 98%
+       49:  263:    printf("%s\n", tokenstr[token]);
+       49:  264:    token = scan();
+       49:  265:    paragraph_number++;
+        -:  266:
+       49:  267:    make_paragraph();
+       49:  268:    if (parse_statement() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  269:
+      182:  270:    while (token == TSEMI) {
+branch  0 taken 74%
+branch  1 taken 26%
+      135:  271:        if (token != TSEMI) { return (error("Symbol ';' is not found")); }
+branch  0 taken 100%
+branch  1 taken 0%
+      135:  272:        printf("\b%s\n", tokenstr[token]);//;
+      135:  273:        token = scan();
+      135:  274:        if (token != TEND){
+branch  0 taken 7%
+branch  1 taken 93%
+      126:  275:            make_paragraph();
+      126:  276:        }
+      135:  277:        if (parse_statement() == ERROR) { return ERROR; }
+branch  0 taken 99%
+branch  1 taken 1%
+        -:  278:    }
+        -:  279:
+       47:  280:    if (token != TEND) { return (error("Keyword 'end' is not found")); }
+branch  0 taken 2%
+branch  1 taken 98%
+       46:  281:    paragraph_number--;
+       46:  282:    if (existence_empty_statement == 1) {
+branch  0 taken 20%
+branch  1 taken 80%
+        9:  283:        existence_empty_statement = 0;
+        -:  284:        //printf("\r");
+        9:  285:    } else {
+       37:  286:        printf("\n");
+        -:  287:    }
+        -:  288:    
+       46:  289:    make_paragraph();
+       46:  290:    printf("%s", tokenstr[token]);//end
+       46:  291:    token = scan();
+        -:  292:
+       46:  293:    return NORMAL;
+       50:  294:}
+        -:  295:
+function parse_statement called 241 returned 100% blocks executed 72%
+      241:  296:int parse_statement() {
+      241:  297:    switch (token) {
+branch  0 taken 2%
+branch  1 taken 17%
+branch  2 taken 13%
+branch  3 taken 30%
+branch  4 taken 12%
+branch  5 taken 5%
+branch  6 taken 2%
+branch  7 taken 9%
+branch  8 taken 1%
+branch  9 taken 9%
+        -:  298:        case TNAME:
+       73:  299:            if (parse_assignment_statement() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+       73:  300:            break;
+        -:  301:        case TIF:
+       29:  302:            if (parse_condition_statement() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+       29:  303:            break;
+        -:  304:        case TWHILE:
+       12:  305:            if (parse_iteration_statement() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+       12:  306:            break;
+        -:  307:        case TBREAK:
+        5:  308:            if (parse_exit_statement() == ERROR) { return ERROR; }
+branch  0 taken 20%
+branch  1 taken 80%
+        4:  309:            break;
+        -:  310:        case TCALL:
+       22:  311:            if (parse_call_statement() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+       22:  312:            break;
+        -:  313:        case TRETURN:
+        2:  314:            if (parse_return_statement() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        2:  315:            break;
+        -:  316:        case TREAD:
+        -:  317:        case TREADLN:
+        6:  318:            if (parse_input_statement() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        6:  319:            break;
+        -:  320:        case TWRITE:
+        -:  321:        case TWRITELN:
+       40:  322:            if (parse_output_statement() == ERROR) { return ERROR; }
+branch  0 taken 3%
+branch  1 taken 98%
+       39:  323:            break;
+        -:  324:        case TBEGIN:
+       21:  325:            if (parse_compound_statement() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+       21:  326:            break;
+        -:  327:        default:
+       31:  328:            existence_empty_statement = 1;
+       31:  329:            break;
+        -:  330:    }
+        -:  331:
+      239:  332:    return NORMAL;
+      241:  333:}
+        -:  334://if  then
+function parse_condition_statement called 29 returned 100% blocks executed 64%
+       29:  335:int parse_condition_statement() {
+       29:  336:    if (token != TIF) { return (error("Keyword 'if' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       29:  337:    printf("%s ", tokenstr[token]);//if
+       29:  338:    token = scan();
+        -:  339:
+       29:  340:    if (parse_expression() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  341:
+       29:  342:    if (token != TTHEN) { return (error("Keyword 'then is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       29:  343:    printf("%s\n", tokenstr[token]); //then
+       29:  344:    token = scan();
+       29:  345:    paragraph_number++;
+        -:  346:    
+        -:  347:   
+       29:  348:        make_paragraph();
+        -:  349:   
+       29:  350:    if (parse_statement() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+       29:  351:    paragraph_number--;
+        -:  352:
+       29:  353:    if (token == TELSE) {
+branch  0 taken 45%
+branch  1 taken 55%
+       16:  354:        if (existence_empty_statement == 1) {
+branch  0 taken 0%
+branch  1 taken 100%
+    #####:  355:            existence_empty_statement = 0;
+    #####:  356:            printf("\r");
+    #####:  357:        } else {
+       16:  358:            printf("\n");
+        -:  359:        }
+       16:  360:        make_paragraph();
+       16:  361:        printf("%s\n", tokenstr[token]);
+       16:  362:        token = scan();
+       16:  363:        paragraph_number++;
+        -:  364:
+       16:  365:        make_paragraph();
+       16:  366:        if (parse_statement() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+       16:  367:        paragraph_number--;
+       16:  368:    }
+        -:  369:
+       29:  370:    return NORMAL;
+       29:  371:}
+        -:  372:
+function parse_iteration_statement called 12 returned 100% blocks executed 60%
+       12:  373:int parse_iteration_statement() {
+       12:  374:    if (token != TWHILE) { return (error("Keyword 'while' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       12:  375:    printf("%s ", tokenstr[token]);
+       12:  376:    token = scan();
+        -:  377:
+       12:  378:    if (parse_expression() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  379:
+       12:  380:    if (token != TDO) { return (error("Keyword 'do' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       12:  381:    printf("%s\n", tokenstr[token]);//do
+       12:  382:    token = scan();
+        -:  383:    //paragraph_number++;
+       12:  384:    whether_inside_iteration++;
+        -:  385:
+       12:  386:    make_paragraph();
+       12:  387:    if (parse_statement() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  388:    //paragraph_number--;
+       12:  389:    whether_inside_iteration--;
+        -:  390:
+       12:  391:    return NORMAL;
+       12:  392:}
+        -:  393:
+function parse_exit_statement called 5 returned 100% blocks executed 85%
+        5:  394:int parse_exit_statement() {
+        5:  395:    if (token != TBREAK) { return (error("Keyword 'break' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+        5:  396:    if (whether_inside_iteration > 0) {
+branch  0 taken 20%
+branch  1 taken 80%
+        4:  397:        printf("%s ", tokenstr[token]);
+        4:  398:        token = scan();
+        4:  399:    } else {
+        1:  400:        return error("Exit statement is not included in iteration statement");
+        -:  401:    }
+        -:  402:
+        4:  403:    return NORMAL;
+        5:  404:}
+        -:  405:
+function parse_call_statement called 22 returned 100% blocks executed 66%
+       22:  406:int parse_call_statement() {
+       22:  407:    if (token != TCALL) { return (error("Keyword 'call' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       22:  408:    printf("%s ", tokenstr[token]);
+       22:  409:    token = scan();
+        -:  410:
+       22:  411:    if (parse_procedure_name() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  412:
+       22:  413:    if (token == TLPAREN) {
+branch  0 taken 9%
+branch  1 taken 91%
+       20:  414:        printf("%s ", tokenstr[token]);
+       20:  415:        token = scan();
+        -:  416:
+       20:  417:        if (parse_expressions() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  418:
+       20:  419:        if (token != TRPAREN) { return (error("Symbol ')' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       20:  420:        printf("%s ", tokenstr[token]);
+       20:  421:        token = scan();
+       20:  422:    }
+        -:  423:
+       22:  424:    return NORMAL;
+       22:  425:}
+        -:  426:
+function parse_expressions called 20 returned 100% blocks executed 77%
+       20:  427:int parse_expressions() {
+       20:  428:    if (parse_expression() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  429:
+       60:  430:    while (token == TCOMMA) {
+branch  0 taken 67%
+branch  1 taken 33%
+       40:  431:        printf("\b%s ", tokenstr[token]);
+       40:  432:        token = scan();
+        -:  433:
+       40:  434:        if (parse_expression() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  435:    }
+        -:  436:
+       20:  437:    return NORMAL;
+       20:  438:}
+        -:  439:
+function parse_return_statement called 2 returned 100% blocks executed 75%
+        2:  440:int parse_return_statement() {
+        2:  441:    if (token != TRETURN) { return (error("Keyword 'return' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+        2:  442:    printf("%s ", tokenstr[token]);
+        2:  443:    token = scan();
+        -:  444:
+        2:  445:    return NORMAL;
+        2:  446:}
+        -:  447:
+function parse_assignment_statement called 73 returned 100% blocks executed 62%
+       73:  448:int parse_assignment_statement() {
+       73:  449:    if (parse_left_part() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  450:
+       73:  451:    if (token != TASSIGN) { return (error("Symbol ':=' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+       73:  452:    printf("%s ", tokenstr[token]); // :=
+       73:  453:    token = scan();
+        -:  454:
+       73:  455:    if (parse_expression() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  456:
+       73:  457:    return NORMAL;
+       73:  458:}
+        -:  459:
+function parse_left_part called 73 returned 100% blocks executed 75%
+       73:  460:int parse_left_part() {
+       73:  461:    if (parse_variable() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  462:
+       73:  463:    return NORMAL;
+       73:  464:}
+        -:  465:
+function parse_variable called 278 returned 100% blocks executed 40%
+      278:  466:int parse_variable() {
+      278:  467:    if (parse_variable_name() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  468:
+      278:  469:    if (token == TLSQPAREN) {
+branch  0 taken 100%
+branch  1 taken 0%
+    #####:  470:        printf("%s ", tokenstr[token]);
+    #####:  471:        token = scan();
+        -:  472:
+    #####:  473:        if (parse_expression() == ERROR) { return ERROR; }
+branch  0 never executed
+branch  1 never executed
+        -:  474:
+    #####:  475:        if (token != TRSQPAREN) {
+branch  0 never executed
+branch  1 never executed
+    #####:  476:            return (error("Symbol ']' is not found at the end of expression"));
+        -:  477:        }
+    #####:  478:        printf("%s ", tokenstr[token]);
+    #####:  479:        token = scan();
+    #####:  480:    }
+        -:  481:
+      278:  482:    return NORMAL;
+      278:  483:}
+        -:  484:
+function parse_expression called 227 returned 100% blocks executed 82%
+      227:  485:int parse_expression() {
+      227:  486:    if (parse_simple_expression() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  487:
+      270:  488:    while ((token == TEQUAL) || (token == TNOTEQ) || (token == TLE) || (token == TLEEQ) || (token == TGR) ||
+branch  0 taken 92%
+branch  1 taken 8%
+branch  2 taken 99%
+branch  3 taken 1%
+branch  4 taken 96%
+branch  5 taken 4%
+branch  6 taken 100%
+branch  7 taken 0%
+branch  8 taken 3%
+branch  9 taken 97%
+branch 10 taken 16%
+branch 11 taken 84%
+      231:  489:           (token == TGREQ)) {
+       43:  490:        if (parse_relational_operator() == ERROR) { return ERROR; }
+branch  0 taken 100%
+branch  1 taken 0%
+        -:  491:
+       43:  492:        if (parse_simple_expression() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  493:    }
+        -:  494:
+      227:  495:    return NORMAL;
+      227:  496:}
+        -:  497:
+function parse_simple_expression called 270 returned 100% blocks executed 77%
+      270:  498:int parse_simple_expression() {
+      270:  499:    switch (token) {
+branch  0 taken 99%
+branch  1 taken 0%
+branch  2 taken 1%
+        -:  500:        case TPLUS:
+    #####:  501:            printf("%s ", tokenstr[token]);
+    #####:  502:            token = scan();
+    #####:  503:            break;
+        -:  504:        case TMINUS:
+        4:  505:            printf("%s ", tokenstr[token]);
+        4:  506:            token = scan();
+        4:  507:            break;
+        -:  508:        default:
+      266:  509:            break;
+        -:  510:    }
+        -:  511:
+      270:  512:    if (parse_term() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  513:
+      294:  514:    while ((token == TPLUS) || (token == TMINUS) || (token == TOR)) {
+branch  0 taken 96%
+branch  1 taken 4%
+branch  2 taken 3%
+branch  3 taken 97%
+branch  4 taken 8%
+branch  5 taken 92%
+       24:  515:        if (parse_additive_operator() == ERROR) { return ERROR; }
+branch  0 taken 100%
+branch  1 taken 0%
+        -:  516:
+       24:  517:        if (parse_term() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  518:    }
+        -:  519:
+      270:  520:    return NORMAL;
+      270:  521:}
+        -:  522:
+function parse_term called 294 returned 100% blocks executed 78%
+      294:  523:int parse_term() {
+      294:  524:    if (parse_factor() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  525:
+      312:  526:    while ((token == TSTAR) || (token == TDIV) || (token == TAND)) {
+branch  0 taken 98%
+branch  1 taken 2%
+branch  2 taken 4%
+branch  3 taken 96%
+branch  4 taken 6%
+branch  5 taken 94%
+       18:  527:        if (parse_multiplicative_operator() == ERROR) { return ERROR; }
+branch  0 taken 100%
+branch  1 taken 0%
+        -:  528:
+       18:  529:        if (parse_factor() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  530:    }
+        -:  531:
+      294:  532:    return NORMAL;
+      294:  533:}
+        -:  534:
+function parse_factor called 313 returned 100% blocks executed 53%
+      313:  535:int parse_factor() {
+      313:  536:    switch (token) {
+branch  0 taken 29%
+branch  1 taken 3%
+branch  2 taken 0%
+branch  3 taken 63%
+branch  4 taken 4%
+branch  5 taken 1%
+        -:  537:        case TNAME:
+      198:  538:            if (parse_variable() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+      198:  539:            break;
+        -:  540:        case TNUMBER:
+        -:  541:        case TFALSE:
+        -:  542:        case TTRUE:
+        -:  543:        case TSTRING:
+       90:  544:            if (parse_constant() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+       90:  545:            break;
+        -:  546:        case TLPAREN:
+       14:  547:            printf("%s ", tokenstr[token]);
+       14:  548:            token = scan();
+        -:  549:
+       14:  550:            if (parse_expression() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  551:
+       14:  552:            if (token != TRPAREN) {
+branch  0 taken 0%
+branch  1 taken 100%
+    #####:  553:                return (error("Symbol ')' is not found at the end of factor"));
+        -:  554:            }
+       14:  555:            printf("%s ", tokenstr[token]);
+       14:  556:            token = scan();
+       14:  557:            break;
+        -:  558:        case TNOT:
+        1:  559:            printf("%s ", tokenstr[token]);
+        1:  560:            token = scan();
+        -:  561:
+        1:  562:            if (parse_factor() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        1:  563:            break;
+        -:  564:        case TINTEGER:
+        -:  565:        case TBOOLEAN:
+        -:  566:        case TCHAR:
+       10:  567:            if (parse_standard_type() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  568:
+       10:  569:            if (token != TLPAREN) {
+branch  0 taken 0%
+branch  1 taken 100%
+    #####:  570:                return (error("Symbol '(' is not found in factor"));
+        -:  571:            }
+       10:  572:            printf("%s ", tokenstr[token]);
+       10:  573:            token = scan();
+        -:  574:
+       10:  575:            if (parse_expression() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  576:
+       10:  577:            if (token != TRPAREN) {
+branch  0 taken 0%
+branch  1 taken 100%
+    #####:  578:                return (error("Symbol ')' is not found at the end of factor"));
+        -:  579:            }
+       10:  580:            printf("%s ", tokenstr[token]);
+       10:  581:            token = scan();
+       10:  582:            break;
+        -:  583:        default:
+    #####:  584:            return (error("Factor is not found"));
+        -:  585:    }
+        -:  586:
+      313:  587:    return NORMAL;
+      313:  588:}
+        -:  589:
+function parse_constant called 90 returned 100% blocks executed 75%
+       90:  590:int parse_constant() {
+       90:  591:    switch (token) {
+branch  0 taken 7%
+branch  1 taken 0%
+branch  2 taken 77%
+branch  3 taken 17%
+        -:  592:        case TNUMBER:
+       69:  593:            printf("%s ", string_attr);
+       69:  594:            token = scan();
+       69:  595:            break;
+        -:  596:        case TFALSE:
+        -:  597:        case TTRUE:
+        6:  598:            printf("%s ", tokenstr[token]);
+        6:  599:            token = scan();
+        6:  600:            break;
+        -:  601:        case TSTRING:
+       15:  602:            printf("'%s' ", string_attr);
+       15:  603:            token = scan();
+       15:  604:            break;
+        -:  605:        default:
+    #####:  606:            return (error("Constant is not found"));
+        -:  607:    }
+        -:  608:
+       90:  609:    return NORMAL;
+       90:  610:}
+        -:  611:
+function parse_multiplicative_operator called 18 returned 100% blocks executed 57%
+       18:  612:int parse_multiplicative_operator() {
+       18:  613:    switch (token) {
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  614:        case TSTAR:
+        -:  615:        case TDIV:
+        -:  616:        case TAND:
+       18:  617:            printf("%s ", tokenstr[token]);
+       18:  618:            token = scan();
+       18:  619:            break;
+        -:  620:        default:
+    #####:  621:            return (error("Multiplicative operator is not found"));
+        -:  622:    }
+        -:  623:
+       18:  624:    return NORMAL;
+       18:  625:}
+        -:  626:
+function parse_additive_operator called 24 returned 100% blocks executed 85%
+       24:  627:int parse_additive_operator() {
+       24:  628:    switch (token) {
+branch  0 taken 0%
+branch  1 taken 50%
+branch  2 taken 33%
+branch  3 taken 17%
+        -:  629:        case TPLUS:
+       12:  630:            printf("%s ", tokenstr[token]);
+       12:  631:            token = scan();
+       12:  632:            break;
+        -:  633:        case TMINUS:
+        8:  634:            printf("%s ", tokenstr[token]);
+        8:  635:            token = scan();
+        8:  636:            break;
+        -:  637:        case TOR:
+        4:  638:            printf("%s ", tokenstr[token]);
+        4:  639:            token = scan();
+        4:  640:            break;
+        -:  641:        default:
+    #####:  642:            return (error("Additive operator is not found"));
+        -:  643:    }
+        -:  644:
+       24:  645:    return NORMAL;
+       24:  646:}
+        -:  647:
+function parse_relational_operator called 43 returned 100% blocks executed 80%
+       43:  648:int parse_relational_operator() {
+       43:  649:    switch (token) {
+branch  0 taken 49%
+branch  1 taken 2%
+branch  2 taken 21%
+branch  3 taken 0%
+branch  4 taken 19%
+branch  5 taken 9%
+branch  6 taken 0%
+        -:  650:        case TEQUAL:
+       21:  651:            printf("%s ", tokenstr[token]);
+       21:  652:            token = scan();
+       21:  653:            break;
+        -:  654:        case TNOTEQ:
+        1:  655:            printf("%s ", tokenstr[token]);
+        1:  656:            token = scan();
+        1:  657:            break;
+        -:  658:        case TLE:
+        9:  659:            printf("%s ", tokenstr[token]);
+        9:  660:            token = scan();
+        9:  661:            break;
+        -:  662:        case TLEEQ:
+    #####:  663:            printf("%s ", tokenstr[token]);
+    #####:  664:            token = scan();
+    #####:  665:            break;
+        -:  666:        case TGR:
+        8:  667:            printf("%s ", tokenstr[token]);
+        8:  668:            token = scan();
+        8:  669:            break;
+        -:  670:        case TGREQ:
+        4:  671:            printf("%s ", tokenstr[token]);
+        4:  672:            token = scan();
+        4:  673:            break;
+        -:  674:        default:
+    #####:  675:            return (error("Relational operator is not found"));
+        -:  676:    }
+        -:  677:
+       43:  678:    return NORMAL;
+       43:  679:}
+        -:  680:
+function parse_input_statement called 6 returned 100% blocks executed 70%
+        6:  681:int parse_input_statement() {
+        6:  682:    switch (token) {
+branch  0 taken 100%
+branch  1 taken 0%
+        -:  683:        case TREAD:
+        -:  684:        case TREADLN:
+        6:  685:            printf("%s ", tokenstr[token]);
+        6:  686:            token = scan();
+        6:  687:            break;
+        -:  688:        default:
+    #####:  689:            return (error("Keyword 'read', 'readln' is not found"));
+        -:  690:    }
+        -:  691:
+        6:  692:    if (token == TLPAREN) {
+branch  0 taken 0%
+branch  1 taken 100%
+        6:  693:        printf("%s ", tokenstr[token]);
+        6:  694:        token = scan();
+        -:  695:
+        6:  696:        if (parse_variable() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  697:
+        7:  698:        while (token == TCOMMA) {
+branch  0 taken 14%
+branch  1 taken 86%
+        1:  699:            printf("%s ", tokenstr[token]);
+        1:  700:            token = scan();
+        -:  701:
+        1:  702:            if (parse_variable() == ERROR) { return ERROR; }
+branch  0 taken 100%
+branch  1 taken 0%
+        -:  703:        }
+        6:  704:        if (token != TRPAREN) { return (error("Symbol ')' is not found")); }
+branch  0 taken 0%
+branch  1 taken 100%
+        6:  705:        printf("%s ", tokenstr[token]);
+        6:  706:        token = scan();
+        6:  707:    }
+        -:  708:
+        6:  709:    return NORMAL;
+        6:  710:}
+        -:  711:
+function parse_output_statement called 40 returned 100% blocks executed 76%
+       40:  712:int parse_output_statement() {
+       40:  713:    switch (token) {
+branch  0 taken 100%
+branch  1 taken 0%
+        -:  714:        case TWRITE:
+        -:  715:        case TWRITELN:
+       40:  716:            printf("%s ", tokenstr[token]);
+       40:  717:            token = scan();
+       40:  718:            break;
+        -:  719:        default:
+    #####:  720:            return (error("Keyword 'write', 'writeln' is not found"));
+        -:  721:    }
+        -:  722:
+       40:  723:    if (token == TLPAREN) {
+branch  0 taken 8%
+branch  1 taken 93%
+       37:  724:        printf("%s ", tokenstr[token]);
+       37:  725:        token = scan();
+        -:  726:
+       37:  727:        if (parse_output_format() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  728:
+       63:  729:        while (token == TCOMMA) {
+branch  0 taken 41%
+branch  1 taken 59%
+       26:  730:            printf("%s ", tokenstr[token]);
+       26:  731:            token = scan();
+        -:  732:
+       26:  733:            if (parse_output_format() == ERROR) { return ERROR; }
+branch  0 taken 100%
+branch  1 taken 0%
+        -:  734:        }
+       37:  735:        if (token != TRPAREN) { return (error("Symbol ')' is not found")); }
+branch  0 taken 3%
+branch  1 taken 97%
+       36:  736:        printf("%s ", tokenstr[token]);
+       36:  737:        token = scan();
+       36:  738:    }
+        -:  739:
+       39:  740:    return NORMAL;
+       40:  741:}
+        -:  742:
+function parse_output_format called 63 returned 100% blocks executed 37%
+       63:  743:int parse_output_format() {
+       63:  744:    switch (token) {
+branch  0 taken 0%
+branch  1 taken 43%
+branch  2 taken 57%
+        -:  745:        case TSTRING:
+       36:  746:            if (strlen(string_attr) > 1) {
+branch  0 taken 94%
+branch  1 taken 6%
+       34:  747:                printf("'%s' ", string_attr);
+       34:  748:                token = scan();
+       34:  749:                break;
+        -:  750:            }
+        -:  751:        case TPLUS:
+        -:  752:        case TMINUS:
+        -:  753:        case TNAME:
+        -:  754:        case TNUMBER:
+        -:  755:        case TFALSE:
+        -:  756:        case TTRUE:
+        -:  757:        case TLPAREN:
+        -:  758:        case TNOT:
+        -:  759:        case TINTEGER:
+        -:  760:        case TBOOLEAN:
+        -:  761:        case TCHAR:
+       29:  762:            if (parse_expression() == ERROR) { return ERROR; }
+branch  0 taken 0%
+branch  1 taken 100%
+        -:  763:
+       29:  764:            if (token == TCOLON) {
+branch  0 taken 100%
+branch  1 taken 0%
+    #####:  765:                printf("%s ", tokenstr[token]);
+    #####:  766:                token = scan();
+        -:  767:
+    #####:  768:                if (token != TNUMBER) { return (error("Number is not found")); }
+branch  0 never executed
+branch  1 never executed
+    #####:  769:                printf("%s ", string_attr);
+    #####:  770:                token = scan();
+    #####:  771:            }
+       29:  772:            break;
+        -:  773:        default:
+    #####:  774:            return (error("Output format is not found"));
+        -:  775:    }
+       63:  776:    return NORMAL;
+       63:  777:}
+        -:  778:
+        -:  779:/* Stage according to paragraph_number */
+function make_paragraph called 348 returned 100% blocks executed 100%
+      348:  780:void make_paragraph(void) {
+      348:  781:    int i = 0;
+     1169:  782:    for (i = 0; i < paragraph_number; i++) {
+branch  0 taken 70%
+branch  1 taken 30%
+      821:  783:        printf("    ");
+      821:  784:    }
+      348:  785:}
